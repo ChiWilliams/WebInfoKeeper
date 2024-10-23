@@ -1,0 +1,41 @@
+{
+
+    "manifest_version": 2,
+    "name": "Persistent Copy and Paste",
+    "description": "Allows you store specific values in browser with minimal friction",
+    "version": "1.0",
+
+    "permissions": ["storage", "activeTab", "clipboardWrite"],
+
+    "browser_action": {
+        "default_icon": "icons/icon64.png",
+        "default_title": "PromptGrab"
+    },
+
+    "icons": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "64": "icons/icon64.png",
+        "96": "icons/icon96.png",
+        "128": "icons/icon128.png"
+    },
+
+    "commands": {
+        "store-content": {
+            "suggested_key": {
+                "default": "Alt+C"
+            },
+            "description": "Copies value into storage"
+        },
+        "get-content": {
+            "suggested_key": {
+                "default": "Alt+G"
+            }
+        }
+    },
+
+    "background": {
+        "scripts": ["background.js"]
+    }
+}
