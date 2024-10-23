@@ -1,20 +1,24 @@
 let isDialogOpen = false;
 
-const createDialog = (selectedText) => {
+const createDialog = (selectedText, containsValue) => {
   const wrapper = document.createElement('div');
   const shadow = wrapper.attachShadow( {mode: 'open' });
+
+  if (!selectedText) {
+    selectedText = "";
+  }
 
   shadow.innerHTML = `
   <body>
     <dialog id="approvalPopup">
       <div>
-        <label for="input-value">Copied value:</label> <br>
-        <textarea id="input-value" name="input-value"
+        <label class="input-class" for="input-value">Copied value:</label> <br>
+        <textarea class="input-class" id="input-value" name="input-value"
           rows=6 cols = 45
           style = "resize: none"
         >${selectedText}</textarea>
         <br>
-        <label for="key-value">Key value:</label><br>
+        <label class="output-class" for="key-value">Key value:</label><br>
         <input type="text" id="key-value" name="key-value" required>
       </div>
     </dialog>
@@ -24,6 +28,11 @@ const createDialog = (selectedText) => {
   document.body.appendChild(wrapper);
 
   const input = shadow.querySelector('#input-value');
+
+  // if we only have the key, we only show the key:
+  if (!containsValue) {
+    shadow.querySelectorAll('.input-class').forEach(element => element.remove());
+  }
   const key = shadow.querySelector('#key-value');
   const dialog = shadow.querySelector('dialog');
 
@@ -43,7 +52,7 @@ async function writeToLocalStorage() {
   isDialogOpen = true;
 
   const selectedText = window.getSelection().toString();
-  const {wrapper, dialog, input, key} = createDialog(selectedText);
+  const {wrapper, dialog, input, key} = createDialog(selectedText, true);
 
   dialog.showModal();
 
@@ -79,6 +88,32 @@ async function writeToLocalStorage() {
   });
 }
 
+async function getKeyForRetrieval() {
+  let {wrapper, dialog, _, key} = await createDialog(null, false);
+  
+  dialog.showModal();
+
+  return new Promise( (resolve) => {
+
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        cleanup(wrapper, dialog);
+        resolve(key.value);
+      }
+    });
+
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cleanup(wrapper, dialog);
+        resolve(null);
+      }
+    });
+
+});
+}
+
 
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -97,5 +132,24 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
     
     return true;
+    }
+
+    if (message.command === "getKeyForRetrieval") {
+      getKeyForRetrieval()
+        .then(result => {
+          sendResponse(result);
+        })
+        .catch(error => {
+          sendResponse({ error: error.message });
+      });
+      // get local storage
+      return true;
+      // return key value
+    }
+
+    if (message.command === "addValueToClipboard") {
+      navigator.clipboard.writeText(message.value);
+
+      return true;
     }
   });

@@ -32,6 +32,11 @@
             "suggested_key": {
                 "default": "Alt+G"
             }
+        },
+        "print-dictionary": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Y"
+            }
         }
     },
 

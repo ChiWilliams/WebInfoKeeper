@@ -1,20 +1,24 @@
 async function logKeyValuePair(keyValue) {
-    let gettingStoredStats = await browser.storage.local.get('dictionary');
-    let dictionary = gettingStoredStats.dictionary;
-
-    if (!dictionary) {
-        dictionary = {};
+    let dict = await browser.storage.local.get('dictionary');
+    if (!dict.dictionary) {
+        dict = {dictionary: {}};
     }
+    dict.dictionary[keyValue.key] = keyValue.value;
+    console.log(`In logKeyValuePair, dictionary is ${JSON.stringify(dict.dictionary)}`);
+    await browser.storage.local.set(dict);
+}
 
-    dictionary[keyValue.key] = keyValue.value
-    await browser.storage.local.set({ dictionary: dictionary})
+async function getValueFomKey(key) {
+    dict = (await browser.storage.local.get('dictionary')).dictionary
+    console.log(`In getValueFromKey, with dictionary valu\n ${JSON.stringify(dict)}`);
+
+    console.log(JSON.stringify(dict[key]));
+    return dict[key] ?? "no such key";
 }
 
 
 browser.commands.onCommand.addListener(async (command) => {
     if (command === "store-content") {
-        console.log("TODO: IMPLEMENT store-content");
-        
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
 
         // check if the content script is injected:
@@ -29,14 +33,42 @@ browser.commands.onCommand.addListener(async (command) => {
 
         let response = await browser.tabs.sendMessage(tab.id,
             {command: "copyAction"});
-        logKeyValuePair(response);
+
+        // check if response is not null, and log it
+        if (response) {
+            logKeyValuePair(response);
+        }
     }
+
     if (command === "get-content") {
         console.log("TODO: implement get-content");
+
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+
+        // check if the content script is injected:
         try {
-            await navigator.clipboard.writeText("Copied to clipboard!");
-        } catch (error) {
-            console.error(error.message);
+            await browser.tabs.sendMessage(tab.id, { command: "ping"});
+        } catch (err) {
+            // if fails, then thing doesn't exist
+            // so we inject it
+            await browser.tabs.executeScript( 
+                { "file": "/content-script/read-and-write.js" });
         }
+
+        let key = await browser.tabs.sendMessage(tab.id,
+            {command: "getKeyForRetrieval"}
+        );
+        const pasteValue = await getValueFomKey(key);
+
+
+        console.log("about to send value!")
+        await browser.tabs.sendMessage(tab.id, { command: "addValueToClipboard", value: pasteValue})
+    }
+
+    if (command == "print-dictionary") {
+        dict = await browser.storage.local.get('dictionary')
+        console.log("in print-dictionary")
+        dictText = JSON.stringify(dict)
+        console.log(`Dict is: \n ${dictText}`)
     }
   });
