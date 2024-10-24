@@ -16,7 +16,7 @@ const createDialog = (selectedText, containsValue) => {
         <textarea class="input-class" id="input-value" name="input-value"
           rows=6 cols = 45
           style = "resize: none"
-        >${selectedText}</textarea>
+        ></textarea>
         <br>
         <label class="output-class" for="key-value">Key value:</label><br>
         <input type="text" id="key-value" name="key-value" required>
@@ -28,13 +28,15 @@ const createDialog = (selectedText, containsValue) => {
   document.body.appendChild(wrapper);
 
   const input = shadow.querySelector('#input-value');
+  input.value = selectedText;
+  const key = shadow.querySelector('#key-value');
+  const dialog = shadow.querySelector('dialog');
 
   // if we only have the key, we only show the key:
   if (!containsValue) {
     shadow.querySelectorAll('.input-class').forEach(element => element.remove());
   }
-  const key = shadow.querySelector('#key-value');
-  const dialog = shadow.querySelector('dialog');
+
 
   return { wrapper, dialog, input, key}
 }
