@@ -33,60 +33,57 @@ async function getValueFomKey(key) {
     return dict[key] ?? "no such key";
 }
 
+async function getTabAndKeys() {
+     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+     const keys = await getDictKeys();
 
+     // check if the content script is injected:
+     try {
+         await browser.tabs.sendMessage(tab.id, { command: "ping"});
+     } catch (err) {
+         // if fails, then thing doesn't exist
+         // so we inject it
+         await browser.tabs.executeScript( 
+             { "file": "/content-script/read-and-write.js" });
+     }
+
+    console.log(`tab: ${tab}, keys: ${keys}`)
+    return {tab, keys}
+}
+
+async function storeContent() {
+    const {tab, keys} = await getTabAndKeys();
+
+    let response = await browser.tabs.sendMessage(tab.id,
+        {command: "copyAction", keys:keys}); 
+
+    //console.log("We got response already?")
+
+    // check if response is not null, and log it
+    if (response) {
+        logKeyValuePair(response);
+    }
+}
+
+async function getContent() {
+    const {tab, keys} = await getTabAndKeys();
+
+    let key = await browser.tabs.sendMessage(tab.id,
+        {command: "getKeyForRetrieval", keys:keys}
+    );
+    const pasteValue = await getValueFomKey(key);
+
+    await browser.tabs.sendMessage(tab.id, { command: "addValueToClipboard", value: pasteValue})
+}
+
+//keyboard shortcuts listener
 browser.commands.onCommand.addListener(async (command) => {
     if (command === "store-content") {
-        //console.log("in store-content");
-        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-        //console.log("finished getting tabs")
-        const keys = await getDictKeys();
-        console.log("in store-content; finished getting tabs and keys")
-
-        // check if the content script is injected:
-        try {
-            await browser.tabs.sendMessage(tab.id, { command: "ping"});
-        } catch (err) {
-            // if fails, then thing doesn't exist
-            // so we inject it
-            await browser.tabs.executeScript( 
-                { "file": "/content-script/read-and-write.js" });
-        }
-
-        let response = await browser.tabs.sendMessage(tab.id,
-            {command: "copyAction", keys:keys}); 
-
-        //console.log("We got response already?")
-
-        // check if response is not null, and log it
-        if (response) {
-            logKeyValuePair(response);
-        }
+        storeContent();
     }
 
     if (command === "get-content") {
-
-        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-        const keys = await getDictKeys();
-        console.log(`in get-content, keys=${keys}`)
-
-        // check if the content script is injected:
-        try {
-            await browser.tabs.sendMessage(tab.id, { command: "ping"});
-        } catch (err) {
-            // if fails, then thing doesn't exist
-            // so we inject it
-            await browser.tabs.executeScript( 
-                { "file": "/content-script/read-and-write.js" });
-        }
-
-        let key = await browser.tabs.sendMessage(tab.id,
-            {command: "getKeyForRetrieval", keys:keys}
-        );
-        const pasteValue = await getValueFomKey(key);
-
-
-        console.log("about to send value!")
-        await browser.tabs.sendMessage(tab.id, { command: "addValueToClipboard", value: pasteValue})
+        getContent();
     }
 
     if (command == "print-dictionary") {
@@ -99,3 +96,31 @@ browser.commands.onCommand.addListener(async (command) => {
 
     }
   });
+
+// Add things to the context menu!
+browser.contextMenus.create( {
+    id: "add-value",
+    title: "Add value",
+    contexts: ["all"],
+    parentId: null
+});
+
+
+browser.contextMenus.create( {
+    id: "get-value",
+    title: "Get value",
+    contexts: ["all"],
+    parentId: null
+    });
+
+browser.contextMenus.onClicked.addListener((info, tab) => {
+    switch (info.menuItemId) {
+        case "add-value":
+            storeContent();
+            break;
+        case "get-value":
+            getContent();
+            break;
+    }
+})
+
