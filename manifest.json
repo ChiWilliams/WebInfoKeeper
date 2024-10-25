@@ -1,15 +1,15 @@
 {
 
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "Persistent Copy and Paste",
     "description": "Allows you store specific values in browser with minimal friction",
     "version": "1.1",
 
-    "permissions": ["storage", "activeTab", "clipboardWrite", "contextMenus"],
+    "permissions": ["storage", "activeTab", "clipboardWrite", "contextMenus", "scripting"],
 
-    "browser_action": {
+    "action": {
         "default_icon": "icons/icon64.png",
-        "default_title": "PromptGrab"
+        "default_title": "BrowserScratchpad"
     },
 
     "icons": {

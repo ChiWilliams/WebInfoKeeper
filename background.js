@@ -43,8 +43,8 @@ async function getTabAndKeys() {
      } catch (err) {
          // if fails, then thing doesn't exist
          // so we inject it
-         await browser.tabs.executeScript( 
-             { "file": "/content-script/read-and-write.js" });
+         await browser.scripting.executeScript(
+             { target: {tabId: tab.id}, files: ["/content-script/read-and-write.js"] });
      }
 
     console.log(`tab: ${tab}, keys: ${keys}`)
@@ -97,21 +97,28 @@ browser.commands.onCommand.addListener(async (command) => {
     }
   });
 
-// Add things to the context menu!
-browser.contextMenus.create( {
-    id: "add-value",
-    title: "Add value",
-    contexts: ["all"],
-    parentId: null
-});
+browser.runtime.onInstalled.addListener(() => {
+    browser.contextMenus.removeAll();
 
-
-browser.contextMenus.create( {
-    id: "get-value",
-    title: "Get value",
-    contexts: ["all"],
-    parentId: null
+    // Add things to the context menu!
+    browser.contextMenus.create( {
+        id: "add-value",
+        title: "Add value",
+        contexts: ["all"],
+        type: "normal",
+        parentId: null
     });
+
+
+    browser.contextMenus.create( {
+        id: "get-value",
+        title: "Get value",
+        contexts: ["all"],
+        type: "normal",
+        parentId: null
+        });
+
+    })
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     switch (info.menuItemId) {
