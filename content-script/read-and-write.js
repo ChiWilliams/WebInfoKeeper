@@ -93,6 +93,7 @@ async function writeToLocalStorage(keys) {
     dialog.addEventListener('keydown', (e) => {
       // get id of active element that is hid in the shadow root
       const activeElementId = document.activeElement.shadowRoot.activeElement.id;
+      e.stopPropagation();
 
       // submit on a ctrl+enter if in value or on an enter if in key
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || activeElementId === 'key-value')) {
@@ -123,6 +124,7 @@ async function getKeyForRetrieval(keys) {
   return new Promise( (resolve) => {
 
     dialog.addEventListener('keydown', (e) => {
+      e.stopPropagation();
       if (e.key === 'Enter') {
         e.preventDefault();
         cleanup(wrapper, dialog);
