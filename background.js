@@ -1,3 +1,20 @@
+/**
+ * This returns a sorted list of all of the current keys in the dictionary from local storage
+ */
+async function getDictKeys() {
+    let dict = (await browser.storage.local.get('dictionary').catch((e) => console.error(e))).dictionary;
+    //console.log(`In getDictKeys, got dict: ${dict}`)
+    if (!dict) {
+        //console.log("in getDictKeys: did not find keys");
+        //console.log(JSON.stringify(dict));
+        return [];
+    }
+    //console.log("About to sort keys")
+    sortedDictKeys = Object.keys(dict).toSorted();
+    //console.log(`In getDictKeys(), keys are ${sortedDictKeys}`)
+    return sortedDictKeys;
+}
+
 async function logKeyValuePair(keyValue) {
     let dict = await browser.storage.local.get('dictionary');
     if (!dict.dictionary) {
@@ -12,14 +29,18 @@ async function getValueFomKey(key) {
     dict = (await browser.storage.local.get('dictionary')).dictionary
     console.log(`In getValueFromKey, with dictionary valu\n ${JSON.stringify(dict)}`);
 
-    console.log(JSON.stringify(dict[key]));
+    //console.log(JSON.stringify(dict[key]));
     return dict[key] ?? "no such key";
 }
 
 
 browser.commands.onCommand.addListener(async (command) => {
     if (command === "store-content") {
+        //console.log("in store-content");
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        //console.log("finished getting tabs")
+        const keys = await getDictKeys();
+        console.log("in store-content; finished getting tabs and keys")
 
         // check if the content script is injected:
         try {
@@ -32,7 +53,9 @@ browser.commands.onCommand.addListener(async (command) => {
         }
 
         let response = await browser.tabs.sendMessage(tab.id,
-            {command: "copyAction"});
+            {command: "copyAction", keys:keys}); 
+
+        //console.log("We got response already?")
 
         // check if response is not null, and log it
         if (response) {
@@ -41,9 +64,10 @@ browser.commands.onCommand.addListener(async (command) => {
     }
 
     if (command === "get-content") {
-        console.log("TODO: implement get-content");
 
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        const keys = await getDictKeys();
+        console.log(`in get-content, keys=${keys}`)
 
         // check if the content script is injected:
         try {
@@ -56,7 +80,7 @@ browser.commands.onCommand.addListener(async (command) => {
         }
 
         let key = await browser.tabs.sendMessage(tab.id,
-            {command: "getKeyForRetrieval"}
+            {command: "getKeyForRetrieval", keys:keys}
         );
         const pasteValue = await getValueFomKey(key);
 
@@ -66,9 +90,12 @@ browser.commands.onCommand.addListener(async (command) => {
     }
 
     if (command == "print-dictionary") {
-        dict = await browser.storage.local.get('dictionary')
-        console.log("in print-dictionary")
-        dictText = JSON.stringify(dict)
-        console.log(`Dict is: \n ${dictText}`)
+        dict = await browser.storage.local.get('dictionary');
+        console.log("in print-dictionary");
+        dictText = JSON.stringify(dict);
+        console.log(`Dict is: \n ${dictText}`);
+        keys = await getDictKeys();
+        console.log(`Done with keys ${keys}`);
+
     }
   });

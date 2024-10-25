@@ -3,7 +3,7 @@
     "manifest_version": 2,
     "name": "Persistent Copy and Paste",
     "description": "Allows you store specific values in browser with minimal friction",
-    "version": "1.0",
+    "version": "1.1",
 
     "permissions": ["storage", "activeTab", "clipboardWrite"],
 

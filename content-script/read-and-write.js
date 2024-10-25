@@ -1,6 +1,7 @@
 let isDialogOpen = false;
 
-const createDialog = (selectedText, containsValue) => {
+const createDialog = (selectedText, keys, containsValue) => {
+  //confirm(` in createDialog `)
   const wrapper = document.createElement('div');
   const shadow = wrapper.attachShadow( {mode: 'open' });
 
@@ -19,11 +20,27 @@ const createDialog = (selectedText, containsValue) => {
         ></textarea>
         <br>
         <label class="output-class" for="key-value">Key value:</label><br>
-        <input type="text" id="key-value" name="key-value" required>
+        <input list="key-strs" id="key-value" name="key-value" required>
+
+        <datalist id="key-strs"></datalist>
       </div>
     </dialog>
   </body>   
   `;
+
+  //confirm(`created innerHTML`)
+
+  // We add elements to our list now:
+  const keyStrs = shadow.querySelector('#key-strs');
+  //confirm(`created keyStrs: ${keyStrs}`);
+  keys.forEach(function(key) {
+    const option = document.createElement('option');
+    //confirm(`option is ${option}`)
+    option.value = key;
+    keyStrs.appendChild(option);
+  });
+
+  //confirm(`added everything to keyStrs`)
 
   document.body.appendChild(wrapper);
 
@@ -46,7 +63,9 @@ const cleanup = (wrapper, dialog) => {
   isDialogOpen = false;
 };
 
-async function writeToLocalStorage() {
+async function writeToLocalStorage(keys) {
+  //confirm(`In writeToLocalStorage, keys=${keys}`)
+  //confirm(`isDialogopen value: ${isDialogOpen}`)
   if (isDialogOpen) {
     confirm("dialog is open")
     return; //exit if dialog is already open
@@ -54,8 +73,10 @@ async function writeToLocalStorage() {
   isDialogOpen = true;
 
   const selectedText = window.getSelection().toString();
-  const {wrapper, dialog, input, key} = createDialog(selectedText, true);
+  //confirm(`will run createDialog with ${selectedText}; ${keys}; ${true}`)
+  const {wrapper, dialog, input, key} = createDialog(selectedText, keys, true);
 
+  //confirm(`ran createDialog with ${selectedText, keys, true}`)
   dialog.showModal();
 
   requestAnimationFrame( () => {
@@ -90,8 +111,8 @@ async function writeToLocalStorage() {
   });
 }
 
-async function getKeyForRetrieval() {
-  let {wrapper, dialog, _, key} = await createDialog(null, false);
+async function getKeyForRetrieval(keys) {
+  let {wrapper, dialog, _, key} = await createDialog(null, keys, false);
   
   dialog.showModal();
 
@@ -125,7 +146,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 }
 
     if (message.command === "copyAction") {
-      writeToLocalStorage()
+      console.log(`in copyAction, message is ${JSON.stringify(message)}`)
+      writeToLocalStorage(message.keys)
         .then(result => {
           sendResponse(result);
         })
@@ -137,7 +159,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.command === "getKeyForRetrieval") {
-      getKeyForRetrieval()
+      confirm(`Keys is ${message.keys}`)
+      getKeyForRetrieval(message.keys)
         .then(result => {
           sendResponse(result);
         })
