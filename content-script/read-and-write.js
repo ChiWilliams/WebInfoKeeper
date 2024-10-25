@@ -67,7 +67,7 @@ async function writeToLocalStorage(keys) {
   //confirm(`In writeToLocalStorage, keys=${keys}`)
   //confirm(`isDialogopen value: ${isDialogOpen}`)
   if (isDialogOpen) {
-    confirm("dialog is open")
+    //confirm("Dialog is already open")
     return; //exit if dialog is already open
   }
   isDialogOpen = true;
@@ -89,9 +89,13 @@ async function writeToLocalStorage(keys) {
 
 
   return new Promise( (resolve) => {
-
+    
     dialog.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      // get id of active element that is hid in the shadow root
+      const activeElementId = document.activeElement.shadowRoot.activeElement.id;
+
+      // submit on a ctrl+enter if in value or on an enter if in key
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || activeElementId === 'key-value')) {
         e.preventDefault();
         const result = { key: key.value, value: input.value };
         cleanup(wrapper, dialog);
@@ -159,7 +163,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.command === "getKeyForRetrieval") {
-      confirm(`Keys is ${message.keys}`)
+      //confirm(`Keys is ${message.keys}`)
       getKeyForRetrieval(message.keys)
         .then(result => {
           sendResponse(result);
