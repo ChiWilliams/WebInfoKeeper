@@ -21,6 +21,16 @@
         "128": "icons/icon128.png"
     },
 
+<<<<<<< HEAD
+=======
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{74489efd-12e1-4264-b026-470339d5bf5f}",
+            "strict_min_version": "109.0"
+        }
+    },
+
+>>>>>>> 2b01999 (Updated manifest.json with correct id)
     "commands": {
         "store-content": {
             "suggested_key": {
