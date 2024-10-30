@@ -180,7 +180,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.command === "addValueToClipboard") {
       navigator.clipboard.writeText(message.value);
-
       return true;
     }
   });

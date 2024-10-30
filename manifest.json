@@ -5,11 +5,12 @@
     "description": "Allows you store specific values in browser with minimal friction",
     "version": "1.1",
 
-    "permissions": ["storage", "activeTab", "clipboardWrite", "contextMenus", "scripting"],
+    "permissions": ["storage", "activeTab", "clipboardRead", "clipboardWrite", "contextMenus", "scripting"],
 
     "action": {
         "default_icon": "icons/icon64.png",
-        "default_title": "BrowserScratchpad"
+        "default_title": "BrowserScratchpad",
+        "default_popup": "popup/popup.html"
     },
 
     "icons": {

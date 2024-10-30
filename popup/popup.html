@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<head>
+    <link href="popup.css" rel="stylesheet" />
+</head>
+
+
+<body>
+<div id="input-mode-div" style="display: none;">
+    <label for="value-input">Value:</label> <br>
+        <textarea class="input-class" id="value-input" name="input-value"
+        rows=6 cols = 45
+        style = "resize: none"
+        ></textarea>
+    <br>
+    <label for="key-input">Key:</label><br>
+    <input list="key-strs" id="key-input" name="key-input" required>
+</div>
+
+<div id = "output-mode-div" style = "display: none;">
+    <label for="key-output">Key:</label><br>
+    <input list="key-strs" id="key-output" name="key-output" required>
+</div>
+
+<div id = "permanently-hid-div" style = "display: none;">
+    <datalist id = "key-strs"></datalist>
+</div>
+
+<div id = "default-div">
+    <button id="to-input-button" class="nav-button">Add Value</button> <br>
+    <button id="to-output-button" class="nav-button">Get Value</button>
+</div>
+
+<script src="popup.js"></script>
+</body>

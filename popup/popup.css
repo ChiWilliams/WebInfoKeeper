@@ -1,0 +1,30 @@
+h1 {
+    color: blue;
+}
+
+body {
+    background-color: #2b2a33;
+    margin: 0;
+    padding: 16px;
+    min-width: 200px;
+    backdrop-filter: blur(5px);
+    width: 1000px;
+    height: 1000px;
+  }
+
+dialog {
+    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 100, 0.8);
+    border: none;
+    border-radius: 8px;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 1); /* Semi-transparent black */
+    backdrop-filter: blur(5px); /* Blurs the background */
+    opacity: 75%; /* Adjusts backdrop opacity */
+}
+
+.optional{
+    visibility: hidden;
+}
