@@ -8,6 +8,23 @@ function addKeysToDoc(keys) {
   });
 }
 
+/**
+ * This function returns everything to the creation default
+ */
+function toDefaultState() {
+    const inputDiv = document.getElementById("input-mode-div");
+    const defaultDiv = document.getElementById("default-div");
+    const outputDiv = document.getElementById("output-mode-div");
+    const keyList = document.getElementById("key-strs");
+
+    // make defaultDiv visible, and other two invisible (usign display)
+    defaultDiv.style.display = "block";
+    inputDiv.style.display = "none";
+    outputDiv.style.display = "none";
+    while (keyList.firstChild) {
+        keyList.removeChild(keyList.lastChild);
+    }
+}
 
 /**
  * This function triggers on alt+c.
@@ -16,10 +33,10 @@ function addKeysToDoc(keys) {
  * It modifies the popup html to show the "input-mode" div (and hide the other divs)
  * It then gets user input, and on Enter, returns a promise with the response
  * 
- * @returns a promise object with the message
+ * @returns None
+ * BUT, it does send a message to the background script
  */
-async function inputMode(clipboard, keys) {
-    //confirm(clipboard)
+function inputMode(clipboard, keys) {
     addKeysToDoc(keys);
     const inputDiv = document.getElementById("input-mode-div");
     const defaultDiv = document.getElementById("default-div");
@@ -34,27 +51,30 @@ async function inputMode(clipboard, keys) {
     valueInput.select();
     
 
-    return new Promise( (resolve) => {
-        //keyboard triggers on Enter [or Ctrl+Enter], or escape
-        inputDiv.addEventListener('keydown', (e) => {
-            const activeElementId = document.activeElement.id;
+    //if Enter, we send a message
+    //Escape will close the browser by default
+    inputDiv.addEventListener('keydown', (e) => {
+        const activeElementId = document.activeElement.id;
 
-            //enter key
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey || activeElementId === "key-input")) {
-                e.preventDefault();
-                const result = { key: keyInput.value, value: valueInput.value};
-                window.close();
-                resolve(result);
-            }
-
-            //escape key also closes:
-            if (e.key === "Escape") {
-                e.preventDefault();
-                window.close();
-                resolve(null);
-            }
-        })
+        //enter key
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey || activeElementId === "key-input")) {
+            e.preventDefault();
+            const result = { key: keyInput.value, value: valueInput.value};
+            browser.runtime.sendMessage({
+                command: "inputResult",
+                result: result
+            });
+            window.close();
+        }
     })
+
+    document.querySelector('#enter-input').addEventListener('click', (e) => {
+        const result = { key: keyInput.value, value: valueInput.value};
+        browser.runtime.sendMessage( {
+            command: "outputResult",
+            result: result
+        });
+    });
 }
 
 /**
@@ -64,9 +84,10 @@ async function inputMode(clipboard, keys) {
  * 
  * It modifies the popup html and then gets the query
  * 
- * @returns a promise object with the outpu
+ * @returns none
+ * BUT, it does send a promise
  */
-async function outputMode(keys) {
+function outputMode(keys) {
     addKeysToDoc(keys);
     const outputDiv = document.getElementById("output-mode-div");
     const defaultDiv = document.getElementById("default-div");
@@ -76,64 +97,69 @@ async function outputMode(keys) {
     const keyOutput = document.getElementById("key-output");
     keyOutput.focus();
 
-    return new Promise(resolve => {
-        //keyboard triggers on enter or release
-        outputDiv.addEventListener('keydown', (e) => {
-            //enter key
-            if (e.key === "Enter") {
-                e.preventDefault();
-                const result = keyOutput.value;
-                resolve(result);
-            }
+    //keyboard triggers on enter
+    //escape closes by default
+    outputDiv.addEventListener('keydown', (e) => {
+        //enter key
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const keyText = keyOutput.value;
+            browser.runtime.sendMessage( {
+                command: "outputResult",
+                key: keyText
+            })
+        }
+    });
 
-            //escape key also closes:
-            if (e.key === "Escape") {
-                e.preventDefault();
-                window.close();
-                resolve(null);
-            }
-        })
-
-    })
+    document.querySelector('#enter-output').addEventListener('click', (e) => {
+        const keyText = keyOutput.value;
+        browser.runtime.sendMessage( {
+            command: "outputResult",
+            key: keyText
+        });
+    });
 }
 
-// In popup.js
+// Listeners from 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.command === "addValueToClipboard") {
         navigator.clipboard.writeText(message.value);
         window.close();
-        return;
       }
 
     if (message.command === "getInput") {
         navigator.clipboard.readText().then(clipboard => {
-        inputMode(clipboard, message.keys)
-        .then(result => {
-            sendResponse(result);
-        })
-        .catch(error => {
-            sendResponse({ error: error.message});
-        });
-        })
-        return true;
-        
+        inputMode(clipboard, message.keys);
+    });
     }
 
     if (message.command === "getOutput") {
         outputMode(message.keys)
-        .then(key => {
-            sendResponse(key)
-        })
-        .catch(error => {
-            sendResponse({ error: error.message});
-        })
-
-        return true;
     }
   // 
 });
 
-// window.addEventListener("beforeunload", (event) => {
-//     event.preventDefault();
-//     confirm("Sure you want to close?");
-// })
+//we deal with the buttons now!
+document.addEventListener('click', async (e) => {
+    if (e.target.matches('#to-input-button')){
+        clipboard = await navigator.clipboard.readText()
+        const keys = await browser.runtime.sendMessage({
+            command: "getKeys"
+        });
+        inputMode(clipboard, keys);
+    }
+
+    if (e.target.matches('#to-output-button')) {
+        const keys = await browser.runtime.sendMessage({
+            command: "getKeys"
+        });
+        outputMode(keys);
+    }
+
+    if (e.target.matches('.to-default')) {
+        toDefaultState();
+    }
+}
+);
+
+//finally, we de

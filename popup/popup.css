@@ -2,6 +2,10 @@ h1 {
     color: blue;
 }
 
+label {
+    color: whitesmoke;
+}
+
 body {
     background-color: #2b2a33;
     margin: 0;

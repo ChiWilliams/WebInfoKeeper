@@ -3,15 +3,10 @@
  */
 async function getDictKeys() {
     let dict = (await browser.storage.local.get('dictionary').catch((e) => console.error(e))).dictionary;
-    //console.log(`In getDictKeys, got dict: ${dict}`)
     if (!dict) {
-        //console.log("in getDictKeys: did not find keys");
-        //console.log(JSON.stringify(dict));
         return [];
     }
-    //console.log("About to sort keys")
     sortedDictKeys = Object.keys(dict).toSorted();
-    //console.log(`In getDictKeys(), keys are ${sortedDictKeys}`)
     return sortedDictKeys;
 }
 
@@ -21,60 +16,14 @@ async function logKeyValuePair(keyValue) {
         dict = {dictionary: {}};
     }
     dict.dictionary[keyValue.key] = keyValue.value;
-    //console.log(`In logKeyValuePair, dictionary is ${JSON.stringify(dict.dictionary)}`);
     await browser.storage.local.set(dict);
 }
 
 async function getValueFomKey(key) {
     dict = (await browser.storage.local.get('dictionary')).dictionary
-    //console.log(`In getValueFromKey, with dictionary valu\n ${JSON.stringify(dict)}`);
-
-    //console.log(JSON.stringify(dict[key]));
     return dict[key] ?? "no such key";
 }
 
-async function getTabAndKeys() {
-     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-     const keys = await getDictKeys();
-
-     // check if the content script is injected:
-     try {
-         await browser.tabs.sendMessage(tab.id, { command: "ping"});
-     } catch (err) {
-         // if fails, then thing doesn't exist
-         // so we inject it
-         await browser.scripting.executeScript(
-             { target: {tabId: tab.id}, files: ["/content-script/read-and-write.js"] });
-     }
-
-    //console.log(`tab: ${tab}, keys: ${keys}`)
-    return {tab, keys}
-}
-
-async function storeContent() {
-    const {tab, keys} = await getTabAndKeys();
-
-    let response = await browser.tabs.sendMessage(tab.id,
-        {command: "copyAction", keys:keys}); 
-
-    //console.log("We got response already?")
-
-    // check if response is not null, and log it
-    if (response) {
-        logKeyValuePair(response);
-    }
-}
-
-async function getContent() {
-    const {tab, keys} = await getTabAndKeys();
-
-    let key = await browser.tabs.sendMessage(tab.id,
-        {command: "getKeyForRetrieval", keys:keys}
-    );
-    const pasteValue = await getValueFomKey(key);
-
-    await browser.tabs.sendMessage(tab.id, { command: "addValueToClipboard", value: pasteValue})
-}
 
 /**
  * This function opens a popup
@@ -91,27 +40,10 @@ async function storePopupContent() {
     // wait a little bit for the popup to open
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    // send message to popup
-    let response;
-    try {
-        response = await browser.runtime.sendMessage( {
-            command: "getInput", keys: keys
+    browser.runtime.sendMessage( {
+        command: "getInput", keys: keys
     })}
-    // if popup is closed out, we set response=null
-    catch (error) {
-        if (error.message.includes("Receiving end does not exist")) {
-            response = null;
-        } else {
-            console.error("Error on message:", error.message);
-        }
-    }
-
-    if (response) {
-        logKeyValuePair(response);
-    }
-
-    return response;
-}
+    // send message to popup
 
 async function getPopupContent() {
     await browser.action.openPopup();
@@ -122,30 +54,10 @@ async function getPopupContent() {
     //get our keys:
     const keys = await getDictKeys();
 
-    let key;
-    try {
-        key = await browser.runtime.sendMessage( {
-            command: "getOutput", keys: keys
-        });
-    }
-    // if popup is closed out, we set response=null
-    catch (error) {
-        if (error.message.includes("Receiving end does not exist")) {
-            key = null;
-        }
-        else {
-            console.error("error:", error.message);
-        }
-    }
-
-    const pasteValue = await getValueFomKey(key);
-
-    browser.runtime.sendMessage({
-        command: "addValueToClipboard", value: pasteValue
+    browser.runtime.sendMessage( {
+        command: "getOutput", 
+        keys: keys
     });
-    
-
-
 }
 
 //keyboard shortcuts listener
@@ -178,6 +90,26 @@ browser.commands.onCommand.addListener(async (command) => {
     }
   });
 
+// message listener from popup
+browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+if (message.command === "inputResult") {
+    logKeyValuePair(message.result); 
+}
+if (message.command === "outputResult") {
+    const pasteValue = await getValueFomKey(message.key);
+    browser.runtime.sendMessage({
+        command: "addValueToClipboard", value: pasteValue
+    });
+}
+
+if (message.command === "getKeys") {
+    const keys = await getDictKeys();
+    return new Promise( resolve => {
+        resolve(keys);
+    });
+}
+});
+
 browser.runtime.onInstalled.addListener(() => {
     browser.contextMenus.removeAll();
 
@@ -204,10 +136,10 @@ browser.runtime.onInstalled.addListener(() => {
 browser.contextMenus.onClicked.addListener((info, tab) => {
     switch (info.menuItemId) {
         case "add-value":
-            storeContent();
+            storePopupContent();
             break;
         case "get-value":
-            getContent();
+            getPopupContent();
             break;
     }
 })
