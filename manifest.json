@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "Persistent Copy and Paste",
     "description": "Allows you store specific values in browser with minimal friction",
-    "version": "1.1",
+    "version": "1.2",
 
     "permissions": ["storage", "clipboardRead", "clipboardWrite", "contextMenus"],
 
@@ -34,7 +34,7 @@
                 "default": "Alt+G"
             }
         },
-        "print-dictionary": {
+        "show-popup": {
             "suggested_key": {
                 "default": "Ctrl+Shift+Y"
             }

@@ -66,14 +66,6 @@ function inputMode(clipboard, keys) {
             });
             window.close();
         }
-    })
-
-    document.querySelector('#enter-input').addEventListener('click', (e) => {
-        const result = { key: keyInput.value, value: valueInput.value};
-        browser.runtime.sendMessage( {
-            command: "inputResult",
-            result: result
-        });
     });
 }
 
@@ -120,27 +112,90 @@ function outputMode(keys) {
     });
 }
 
+function getUpdateKey(keys) {
+    addKeysToDoc(keys);
+    const outputDiv = document.getElementById("output-mode-div");
+    const defaultDiv = document.getElementById("default-div");
+    outputDiv.style.display = "block";
+    defaultDiv.style.display = "none";
+
+    const keyOutput = document.getElementById("key-output");
+    keyOutput.focus();
+
+    //keyboard triggers on enter
+    //escape closes by default
+    outputDiv.addEventListener('keydown', (e) => {
+        //enter key
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const keyText = keyOutput.value;
+            browser.runtime.sendMessage( {
+                command: "getUpdateResult",
+                key: keyText
+            })
+        }
+    });
+}
+
+function updateValue(key, value) {
+    const outputDiv = document.getElementById("output-mode-div");
+    const updateDiv = document.getElementById("update-mode-div");
+    outputDiv.style.display = "none";
+    updateDiv.style.display = "block";
+
+    const keyArea = document.getElementById("update-mode-key");
+    keyArea.textContent = key;
+    const valueArea = document.getElementById("update-mode-value");
+    valueArea.value = value;
+
+    document.querySelector('.update-value').addEventListener('click', (e) => {
+        const result = { key: key, value: valueArea.value};
+        browser.runtime.sendMessage( {
+            command: "inputResult",
+            result: result
+        });
+        window.close();
+    });
+
+    document.querySelector('.delete-value').addEventListener('click', (e) => {
+        browser.runtime.sendMessage( {
+            command: "deleteKey",
+            key: key
+        });
+    })
+    
+}
+
 // Listeners from 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.command === "addValueToClipboard") {
-        navigator.clipboard.writeText(message.value);
-        window.close();
-      }
-
-    if (message.command === "getInput") {
-        navigator.clipboard.readText().then(clipboard => {
-        inputMode(clipboard, message.keys);
-    });
+    switch (message.command) {
+        case "addValueToClipboard":
+            navigator.clipboard.writeText(message.value);
+            window.close();
+            break;
+        case "getInput":
+            navigator.clipboard.readText().then(clipboard => {
+                inputMode(clipboard, message.keys)
+            });
+            break;
+        case "getOutput":
+            outputMode(message.keys);
+            break;
+        case "updateValueInPopup":
+            updateValue(message.key, message.value);
+            break;
+        default:
+            console.error('Unknown command:', message.command);
+            // Handle unexpected commands appropriately
+            break;
     }
 
-    if (message.command === "getOutput") {
-        outputMode(message.keys)
-    }
   // 
 });
 
 //we deal with the buttons now!
 document.addEventListener('click', async (e) => {
+    //navigation to input mode
     if (e.target.matches('#to-input-button')){
         clipboard = await navigator.clipboard.readText()
         const keys = await browser.runtime.sendMessage({
@@ -149,11 +204,20 @@ document.addEventListener('click', async (e) => {
         inputMode(clipboard, keys);
     }
 
+    //navigation to output mode
     if (e.target.matches('#to-output-button')) {
         const keys = await browser.runtime.sendMessage({
             command: "getKeys"
         });
         outputMode(keys);
+    }
+
+    //navigation to modify button
+    if (e.target.matches('#to-modify-key-button')) {
+        const keys = await browser.runtime.sendMessage({
+            command: "getKeys"
+        });
+        getUpdateKey(keys);
     }
 
     if (e.target.matches('.to-default')) {

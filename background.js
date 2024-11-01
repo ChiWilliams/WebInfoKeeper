@@ -10,6 +10,19 @@ async function getDictKeys() {
     return sortedDictKeys;
 }
 
+async function deleteDictKey(key) {
+    console.log(`in deleteDictKey with key: ${key}`)
+    let dict = (await browser.storage.local.get('dictionary').catch((e) => console.error(e)));
+    console.log(`dict is ${JSON.stringify(dict)}`);
+    try{    
+        delete dict.dictionary[key]; 
+    }
+    catch (error) {
+        console.error(error);}
+    console.log(`after deleting: dict is ${JSON.stringify(dict)}`);
+    browser.storage.local.set(dict);
+}
+
 async function logKeyValuePair(keyValue) {
     let dict = await browser.storage.local.get('dictionary');
     if (!dict.dictionary) {
@@ -71,14 +84,8 @@ browser.commands.onCommand.addListener(async (command) => {
     }
 
     let response;
-    if (command == "print-dictionary") {
-        try {
-        }
-        catch (error) {
-            console.error(error)
-        }
-        response = await getPopupContent();
-        console.log("After popup closed, message is", response)
+    if (command == "show-popup") {
+        await browser.action.openPopup();
 
         dict = await browser.storage.local.get('dictionary');
         console.log("in print-dictionary");
@@ -92,22 +99,40 @@ browser.commands.onCommand.addListener(async (command) => {
 
 // message listener from popup
 browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-if (message.command === "inputResult") {
-    logKeyValuePair(message.result); 
-}
-if (message.command === "outputResult") {
-    const pasteValue = await getValueFomKey(message.key);
-    browser.runtime.sendMessage({
-        command: "addValueToClipboard", value: pasteValue
-    });
-}
+    switch (message.command) {
+        case "inputResult":
+            logKeyValuePair(message.result);
+            break;
+        case "outputResult":
+            const pasteValue = await getValueFomKey(message.key);
+            browser.runtime.sendMessage({
+                command: "addValueToClipboard", value: pasteValue
+            });
+            break;
+        case "getKeys":
+            const keys = await getDictKeys();
+            return new Promise( resolve => {
+                resolve(keys);
+            });
+        case "getUpdateResult":
+            console.log("In getUpdateResult");
+            const pasteValue2 = await getValueFomKey(message.key);
+            browser.runtime.sendMessage({
+                command: "updateValueInPopup",
+                value: pasteValue2,
+                key: message.key
+            });
+            console.log("In getUpdateResult");
+            break;
+        case "deleteKey":
+            deleteDictKey(message.key);
+            break;
+        default:
+            console.error('Unknown command:', message.command);
+            break;
+    }
 
-if (message.command === "getKeys") {
-    const keys = await getDictKeys();
-    return new Promise( resolve => {
-        resolve(keys);
-    });
-}
+
 });
 
 browser.runtime.onInstalled.addListener(() => {
