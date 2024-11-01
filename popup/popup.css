@@ -1,5 +1,7 @@
 h1 {
-    color: blue;
+    color: whitesmoke;
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
 label {
@@ -9,26 +11,59 @@ label {
 body {
     background-color: #2b2a33;
     margin: 0;
-    padding: 16px;
-    min-width: 200px;
-    backdrop-filter: blur(5px);
-    width: 1000px;
-    height: 1000px;
+    padding: 2rem;
+    min-width: 300px;
+    max-width: 400px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-dialog {
-    backdrop-filter: blur(5px);
-    background: rgba(255, 255, 100, 0.8);
-    border: none;
-    border-radius: 8px;
+#default-div {
+    width: 100%;
+    display: grid;
+    grid-template: 
+                "title title" auto
+                "add get" auto
+                "list modify" auto
+                ". buttons" auto / 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
 }
 
-dialog::backdrop {
-    background-color: rgba(0, 0, 0, 1); /* Semi-transparent black */
-    backdrop-filter: blur(5px); /* Blurs the background */
-    opacity: 75%; /* Adjusts backdrop opacity */
+/* Assign grid areas to elements */
+h1 { grid-area: title; }
+#to-input-button { grid-area: add; }
+#to-output-button { grid-area: get; }
+#to-list-keys-button { grid-area: list; }
+#to-modify-key-button { grid-area: modify; }
+.settings-exit-container { 
+    grid-area: buttons;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
 }
 
-.optional{
-    visibility: hidden;
+
+#default-div button {
+    width: 100%;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #3b3a43;
+    color: whitesmoke;
+    border: 1px solid #4b4a53;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+/* Apply width to utility buttons */
+#default-div button.utilities-nav {
+    width: 100%;
+    padding: 0.25rem 0.75rem;
+}
+
+button:hover {
+    background-color: #171203;
 }

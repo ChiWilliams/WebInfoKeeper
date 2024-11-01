@@ -18,7 +18,7 @@ function toDefaultState() {
     const keyList = document.getElementById("key-strs");
 
     // make defaultDiv visible, and other two invisible (usign display)
-    defaultDiv.style.display = "block";
+    defaultDiv.style.display = "grid";
     inputDiv.style.display = "none";
     outputDiv.style.display = "none";
     while (keyList.firstChild) {
@@ -71,7 +71,7 @@ function inputMode(clipboard, keys) {
     document.querySelector('#enter-input').addEventListener('click', (e) => {
         const result = { key: keyInput.value, value: valueInput.value};
         browser.runtime.sendMessage( {
-            command: "outputResult",
+            command: "inputResult",
             result: result
         });
     });
@@ -158,6 +158,10 @@ document.addEventListener('click', async (e) => {
 
     if (e.target.matches('.to-default')) {
         toDefaultState();
+    }
+
+    if (e.target.matches('#to-exit')) {
+        window.close();
     }
 }
 );
