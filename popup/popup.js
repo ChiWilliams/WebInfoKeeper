@@ -1,3 +1,24 @@
+let currentKeys = [];
+let currentKeysAndValues = {};
+
+document.addEventListener('DOMContentLoaded', async () => {
+    toDefaultState();
+  });
+
+
+/**
+ * This function sets the global variables currentKeys and currentKeysAndValues
+ * It sends a message to the background script
+ */
+async function refreshKeyData() {
+    currentKeys = await browser.runtime.sendMessage({
+        command: "getKeys"
+    });
+    currentKeysAndValues = await browser.runtime.sendMessage({
+        command: "getKeysAndVals"
+    });
+}
+
 function addKeysToDoc(keys) {
     const keyList = document.getElementById("key-strs");
 
@@ -26,7 +47,7 @@ function hideAllDivs() {
 /**
  * This function returns everything to the creation default
  */
-function toDefaultState() {
+async function toDefaultState() {
     const defaultDiv = document.getElementById("default-div");
     const keyList = document.getElementById("key-strs");
     const keyValueList = document.getElementById("keys-list");
@@ -42,6 +63,9 @@ function toDefaultState() {
     while (keyValueList.firstChild) {
         keyValueList.removeChild(keyValueList.lastChild)
     }
+
+    await refreshKeyData();
+    addKeysToDoc(currentKeys);
 }
 
 /**
@@ -54,8 +78,7 @@ function toDefaultState() {
  * @returns None
  * BUT, it does send a message to the background script
  */
-function inputMode(clipboard, keys) {
-    addKeysToDoc(keys);
+function inputMode(clipboard) {
     const inputDiv = document.getElementById("input-mode-div");
     const defaultDiv = document.getElementById("default-div");
     inputDiv.style.display = "block";
@@ -97,8 +120,7 @@ function inputMode(clipboard, keys) {
  * @returns none
  * BUT, it does send a promise
  */
-function outputMode(keys) {
-    addKeysToDoc(keys);
+function outputMode() {
     const outputDiv = document.getElementById("output-mode-div");
     const defaultDiv = document.getElementById("default-div");
     outputDiv.style.display = "block";
@@ -130,8 +152,7 @@ function outputMode(keys) {
     });
 }
 
-function getUpdateKey(keys) {
-    addKeysToDoc(keys);
+function getUpdateKey() {
     const outputDiv = document.getElementById("output-mode-div");
     const defaultDiv = document.getElementById("default-div");
     outputDiv.style.display = "block";
@@ -189,13 +210,13 @@ function listKeys(keysAndVals) {
         // create delete button:
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.onclick = () => {
+        deleteButton.onclick = async () => {
             hideAllDivs();
-            browser.runtime.sendMessage( {
+            await browser.runtime.sendMessage( {
                 command: "deleteKey",
                 key: key
-            });
-            toDefaultState();
+            })
+            await toDefaultState();
         }
 
         // value on tooltip
@@ -235,11 +256,12 @@ function updateValue(key, value) {
         toDefaultState();
     });
 
-    document.querySelector('.delete-value').addEventListener('click', (e) => {
-        browser.runtime.sendMessage( {
+    document.querySelector('.delete-value').addEventListener('click', async (e) => {
+        await browser.runtime.sendMessage( {
             command: "deleteKey",
             key: key
         });
+        await toDefaultState();
     })
     
 }
@@ -253,11 +275,11 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
         case "getInput":
             navigator.clipboard.readText().then(clipboard => {
-                inputMode(clipboard, message.keys)
+                inputMode(clipboard)
             });
             break;
         case "getOutput":
-            outputMode(message.keys);
+            outputMode();
             break;
         case "updateValueInPopup":
             updateValue(message.key, message.value);
@@ -276,36 +298,22 @@ document.addEventListener('click', async (e) => {
     //navigation to input mode
     if (e.target.matches('#to-input-button')){
         clipboard = await navigator.clipboard.readText()
-        const keys = await browser.runtime.sendMessage({
-            command: "getKeys"
-        });
-        inputMode(clipboard, keys);
+        inputMode(clipboard);
     }
 
     //navigation to output mode
     if (e.target.matches('#to-output-button')) {
-        const keys = await browser.runtime.sendMessage({
-            command: "getKeys"
-        });
-        outputMode(keys);
+        outputMode();
     }
 
     //navigation to list_keys
     if (e.target.matches('#to-list-keys-button')) {
-        const keysAndVals = await browser.runtime.sendMessage({
-            command: "getKeysAndVals"
-        });
-        console.log(`keysAndVals is ${JSON.stringify(keysAndVals)}`);
-        dict = await listKeys(keysAndVals);
-
+        listKeys(currentKeysAndValues);
     }
 
     //navigation to modify button
     if (e.target.matches('#to-modify-key-button')) {
-        const keys = await browser.runtime.sendMessage({
-            command: "getKeys"
-        });
-        getUpdateKey(keys);
+        getUpdateKey();
     }
 
     // return to default (homepage)
@@ -320,4 +328,3 @@ document.addEventListener('click', async (e) => {
 }
 );
 
-//finally, we de
