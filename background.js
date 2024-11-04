@@ -10,6 +10,15 @@ async function getDictKeys() {
     return sortedDictKeys;
 }
 
+/**
+ * This gets the keys and values!
+ * @returns The current state of the dictionary from local storage
+ */
+async function getKeysAndVals() {
+    let dict = (await browser.storage.local.get('dictionary').catch((e) => console.error(e))).dictionary;
+    return dict;
+}
+
 async function deleteDictKey(key) {
     console.log(`in deleteDictKey with key: ${key}`)
     let dict = (await browser.storage.local.get('dictionary').catch((e) => console.error(e)));
@@ -114,8 +123,14 @@ browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             return new Promise( resolve => {
                 resolve(keys);
             });
+        case "getKeysAndVals":
+            const dict = await getKeysAndVals();
+            return new Promise( resolve => {
+                resolve(dict);
+            })
+            
         case "getUpdateResult":
-            console.log("In getUpdateResult");
+            //console.log("In getUpdateResult");
             const pasteValue2 = await getValueFomKey(message.key);
             browser.runtime.sendMessage({
                 command: "updateValueInPopup",

@@ -8,21 +8,39 @@ function addKeysToDoc(keys) {
   });
 }
 
+function hideAllDivs() {
+    const inputDiv = document.getElementById("input-mode-div");
+    const defaultDiv = document.getElementById("default-div");
+    const outputDiv = document.getElementById("output-mode-div");
+    const updateDiv = document.getElementById("update-mode-div");
+    const listDiv = document.getElementById("list-keys-div");
+
+    defaultDiv.style.display = "none";
+    inputDiv.style.display = "none";
+    outputDiv.style.display = "none";
+    updateDiv.style.display = "none";
+    listDiv.style.display = "none";
+
+}
+
 /**
  * This function returns everything to the creation default
  */
 function toDefaultState() {
-    const inputDiv = document.getElementById("input-mode-div");
     const defaultDiv = document.getElementById("default-div");
-    const outputDiv = document.getElementById("output-mode-div");
     const keyList = document.getElementById("key-strs");
+    const keyValueList = document.getElementById("keys-list");
 
-    // make defaultDiv visible, and other two invisible (usign display)
+    // make defaultDiv visible, and others invisible
+    hideAllDivs();
     defaultDiv.style.display = "grid";
-    inputDiv.style.display = "none";
-    outputDiv.style.display = "none";
+
+    //clear the keyList and the keyValueList
     while (keyList.firstChild) {
         keyList.removeChild(keyList.lastChild);
+    }
+    while (keyValueList.firstChild) {
+        keyValueList.removeChild(keyValueList.lastChild)
     }
 }
 
@@ -137,6 +155,66 @@ function getUpdateKey(keys) {
     });
 }
 
+function listKeys(keysAndVals) {
+    const defaultDiv = document.getElementById("default-div");
+    const listDiv = document.getElementById("list-keys-div");
+    defaultDiv.style.display = "none";
+    listDiv.style.display = "block";
+
+    keysList = document.getElementById("keys-list");
+    Object.entries(keysAndVals).forEach(([key, value]) => {
+        const li = document.createElement('li');
+        li.className = 'key-list-item';
+
+        // create keySpan
+        const keySpan = document.createElement('span')
+        keySpan.class = 'key-list-key';
+        keySpan.textContent=key;
+
+        // Create and append buttons div
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'key-list-buttons';
+
+        //create update buttons:
+        const updateButton = document.createElement('button');
+        updateButton.textContent = 'Update';
+        updateButton.onclick = () => {
+            hideAllDivs();
+            browser.runtime.sendMessage( {
+                command: "getUpdateResult",
+                key: key
+            });
+        }
+
+        // create delete button:
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => {
+            hideAllDivs();
+            browser.runtime.sendMessage( {
+                command: "deleteKey",
+                key: key
+            });
+            toDefaultState();
+        }
+
+        // value on tooltip
+        const tooltipDiv = document.createElement('div');
+        tooltipDiv.className = 'key-tooltip';
+        tooltipDiv.textContent = value;
+
+        buttonsDiv.appendChild(updateButton);
+        buttonsDiv.appendChild(deleteButton);
+        li.appendChild(keySpan);
+        li.appendChild(buttonsDiv);
+        li.appendChild(tooltipDiv);
+        
+        keysList.appendChild(li);
+    });
+
+
+}
+
 function updateValue(key, value) {
     const outputDiv = document.getElementById("output-mode-div");
     const updateDiv = document.getElementById("update-mode-div");
@@ -154,7 +232,7 @@ function updateValue(key, value) {
             command: "inputResult",
             result: result
         });
-        window.close();
+        toDefaultState();
     });
 
     document.querySelector('.delete-value').addEventListener('click', (e) => {
@@ -212,6 +290,16 @@ document.addEventListener('click', async (e) => {
         outputMode(keys);
     }
 
+    //navigation to list_keys
+    if (e.target.matches('#to-list-keys-button')) {
+        const keysAndVals = await browser.runtime.sendMessage({
+            command: "getKeysAndVals"
+        });
+        console.log(`keysAndVals is ${JSON.stringify(keysAndVals)}`);
+        dict = await listKeys(keysAndVals);
+
+    }
+
     //navigation to modify button
     if (e.target.matches('#to-modify-key-button')) {
         const keys = await browser.runtime.sendMessage({
@@ -220,10 +308,12 @@ document.addEventListener('click', async (e) => {
         getUpdateKey(keys);
     }
 
+    // return to default (homepage)
     if (e.target.matches('.to-default')) {
         toDefaultState();
     }
 
+    // exit
     if (e.target.matches('#to-exit')) {
         window.close();
     }

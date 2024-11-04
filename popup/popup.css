@@ -68,6 +68,19 @@ h1 { grid-area: title; }
     background-color: #4b4a53;
 }
 
-h2, p {
-    background-color: ghostwhite;
+/* Minimal CSS needed for functionality */
+.key-tooltip {
+    display: none;
+}
+
+.key-list-item:hover .key-tooltip {
+    display: block;
+}
+
+.key-list-buttons {
+    display: inline-block;
+}
+
+h2, p, li {
+    color: ghostwhite;
 }
