@@ -46,15 +46,19 @@ h1 { grid-area: title; }
 }
 
 .to-default {
-    width: 50%;
-    align-self: right;
-    padding: 0.75rem 1rem;
+    min-width: fit-content;
+    width: 25%;
+    display: block;
+    white-space: nowrap;
+    margin-left: auto;
+    margin-right: 0px;
+    padding: 0.25rem;
     background-color: #3b3a43;
     color: whitesmoke;
+    font-size: small;
     border: 1px solid #4b4a53;
     border-radius: 4px;
     cursor: pointer;
-    margin-bottom: 0.5rem;
 }
 
 
@@ -101,13 +105,16 @@ h1 { grid-area: title; }
     position: absolute;
     top: 100%;
     left: 0%;
-    margin-top: 8px;
+    margin-top: -5px;  /* negative margin to create overlap */
+    padding-top: 10px;  /* padding to maintain visual spacing */
     background-color: ghostwhite;
     color: black;
     padding: 8px;
     border-radius: 4px;
     z-index: 10;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);    
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    max-height: 250px;
+    overflow: scroll;   
 }
 
 
@@ -140,6 +147,7 @@ h1 { grid-area: title; }
 .key-list-item {
     display: flex;
     justify-content: space-between;
+    gap: 1em;
     border: 1px solid;
     align-items: center;
     padding: 12px;
