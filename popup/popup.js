@@ -110,6 +110,46 @@ function inputMode(clipboard) {
     });
 }
 
+function setupKeyInputMode(options) {
+    const outputDiv = document.getElementById("output-mode-div");
+    const defaultDiv = document.getElementById("default-div");
+    outputDiv.style.display = "block";
+    defaultDiv.style.display = "none";
+
+    const isValidKey = (key) => currentKeys.includes(key);
+
+    const keyOutput = document.getElementById("key-output");
+    keyOutput.focus();
+
+    const handleSubmit = () => {
+        const keyText = keyOutput.value;
+        if (isValidKey(keyText)) {
+            browser.runtime.sendMessage( {
+                command: options.command,
+                key: keyText
+            }) 
+        } else {
+            keyOutput.classList.add('invalid');
+            setTimeout(() => keyOutput.classList.remove('invalid'), 2000);
+        }
+    }
+
+    //keyboard triggers on enter
+    //escape closes by default
+    outputDiv.addEventListener('keydown', (e) => {
+        //enter key
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit();  
+        }
+    });
+
+    document.querySelector('#enter-output').addEventListener('click', (e) => {
+        handleSubmit();
+    });
+}
+
+
 /**
  * This function (eventually) triggers on alt+g
  * It can also trigger on button press in popup or context menu
@@ -121,59 +161,11 @@ function inputMode(clipboard) {
  * BUT, it does send a promise
  */
 function outputMode() {
-    const outputDiv = document.getElementById("output-mode-div");
-    const defaultDiv = document.getElementById("default-div");
-    outputDiv.style.display = "block";
-    defaultDiv.style.display = "none";
-
-    const keyOutput = document.getElementById("key-output");
-    keyOutput.focus();
-
-    //keyboard triggers on enter
-    //escape closes by default
-    outputDiv.addEventListener('keydown', (e) => {
-        //enter key
-        if (e.key === "Enter") {
-            e.preventDefault();
-            const keyText = keyOutput.value;
-            browser.runtime.sendMessage( {
-                command: "outputResult",
-                key: keyText
-            })
-        }
-    });
-
-    document.querySelector('#enter-output').addEventListener('click', (e) => {
-        const keyText = keyOutput.value;
-        browser.runtime.sendMessage( {
-            command: "outputResult",
-            key: keyText
-        });
-    });
+    setupKeyInputMode({ command : "outputResult" });
 }
 
 function getUpdateKey() {
-    const outputDiv = document.getElementById("output-mode-div");
-    const defaultDiv = document.getElementById("default-div");
-    outputDiv.style.display = "block";
-    defaultDiv.style.display = "none";
-
-    const keyOutput = document.getElementById("key-output");
-    keyOutput.focus();
-
-    //keyboard triggers on enter
-    //escape closes by default
-    outputDiv.addEventListener('keydown', (e) => {
-        //enter key
-        if (e.key === "Enter") {
-            e.preventDefault();
-            const keyText = keyOutput.value;
-            browser.runtime.sendMessage( {
-                command: "getUpdateResult",
-                key: keyText
-            })
-        }
-    });
+    setupKeyInputMode({ command : "getUpdateResult"});
 }
 
 function listKeys(keysAndVals) {
@@ -219,10 +211,20 @@ function listKeys(keysAndVals) {
             await toDefaultState();
         }
 
-        // value on tooltip
+        // creating the tool tip:
         const tooltipDiv = document.createElement('div');
         tooltipDiv.className = 'key-tooltip';
-        tooltipDiv.textContent = value;
+
+        const tooltipLabel = document.createElement('p');
+        tooltipLabel.className = 'tooltip-label';
+        tooltipLabel.textContent = 'Value:';
+
+        const tooltipValue = document.createElement('p');
+        tooltipValue.className = 'tooltip-value';
+        tooltipValue.textContent = value;
+
+        tooltipDiv.appendChild(tooltipLabel);
+        tooltipDiv.appendChild(tooltipValue)
 
         buttonsDiv.appendChild(updateButton);
         buttonsDiv.appendChild(deleteButton);

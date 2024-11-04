@@ -13,7 +13,7 @@ body {
     margin: 0;
     padding: 2rem;
     min-width: 300px;
-    max-width: 400px;
+    max-width: 600px;
     min-height: 400px;
     display: flex;
     flex-direction: column;
@@ -45,6 +45,18 @@ h1 { grid-area: title; }
     gap: 1rem;
 }
 
+.to-default {
+    width: 50%;
+    align-self: right;
+    padding: 0.75rem 1rem;
+    background-color: #3b3a43;
+    color: whitesmoke;
+    border: 1px solid #4b4a53;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
 
 #default-div button {
     width: 100%;
@@ -68,14 +80,74 @@ h1 { grid-area: title; }
     background-color: #4b4a53;
 }
 
+#key-output.valid {
+    border-color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+#key-output.invalid {
+    border-color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+#enter-output:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Minimal CSS needed for functionality */
 .key-tooltip {
     display: none;
+    position: absolute;
+    top: 100%;
+    left: 0%;
+    margin-top: 8px;
+    background-color: ghostwhite;
+    color: black;
+    padding: 8px;
+    border-radius: 4px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);    
 }
+
+
+.tooltip-label {
+    color: black;
+    margin: 0 0 4px 0;
+    font-weight: 500;
+}
+
+.tooltip-value {
+    color: #666666;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 
 .key-list-item:hover .key-tooltip {
     display: block;
 }
+
+#keys-list {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0;
+    list-style: none;
+  }
+
+
+.key-list-item {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    position: relative;
+}
+
 
 .key-list-buttons {
     display: inline-block;
