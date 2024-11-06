@@ -215,6 +215,16 @@ function listKeys(keysAndVals) {
             await toDefaultState();
         }
 
+        const getButton = document.createElement('button');
+        getButton.textContent = 'Get';
+        getButton.onclick = () => {
+            hideAllDivs();
+            browser.runtime.sendMessage( {
+                command: "outputResult",
+                key: key
+            })
+        }
+
         // creating the tool tip:
         const tooltipDiv = document.createElement('div');
         tooltipDiv.className = 'key-tooltip';

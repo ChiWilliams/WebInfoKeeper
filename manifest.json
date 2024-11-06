@@ -22,6 +22,13 @@
         "128": "icons/icon128.png"
     },
 
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{74489efd-12e1-4264-b026-470339d5bf5f}",
+            "strict_min_version": "109.0"
+        }
+    },
+
     "commands": {
         "store-content": {
             "suggested_key": {
@@ -44,6 +51,6 @@
     },
 
     "background": {
-        "service_worker": "background.js"
+        "script": "background.js"
     }
 }
