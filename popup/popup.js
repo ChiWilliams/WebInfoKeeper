@@ -1,3 +1,5 @@
+const browser = chrome;
+
 let currentKeys = [];
 let currentKeysAndValues = {};
 
@@ -11,12 +13,12 @@ document.addEventListener('DOMContentLoaded', async () => {
  * It sends a message to the background script
  */
 async function refreshKeyData() {
-    currentKeys = await browser.runtime.sendMessage({
+    currentKeys = (await browser.runtime.sendMessage({
         command: "getKeys"
-    });
-    currentKeysAndValues = await browser.runtime.sendMessage({
+    })) || []; 
+    currentKeysAndValues = (await browser.runtime.sendMessage({
         command: "getKeysAndVals"
-    });
+    })) || [];
 }
 
 function addKeysToDoc(keys) {
@@ -91,7 +93,9 @@ function inputMode(clipboard) {
     valueInput.focus();
     valueInput.select();
     
-
+    const handleInputSubmit = () => {
+        
+    }
     //if Enter, we send a message
     //Escape will close the browser by default
     inputDiv.addEventListener('keydown', (e) => {

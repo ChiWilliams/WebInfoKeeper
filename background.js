@@ -1,3 +1,5 @@
+const browser = chrome;
+
 /**
  * This returns a sorted list of all of the current keys in the dictionary from local storage
  */
@@ -92,7 +94,6 @@ browser.commands.onCommand.addListener(async (command) => {
         getPopupContent();
     }
 
-    let response;
     if (command == "show-popup") {
         await browser.action.openPopup();
 
@@ -107,37 +108,37 @@ browser.commands.onCommand.addListener(async (command) => {
   });
 
 // message listener from popup
-browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.command) {
         case "inputResult":
             logKeyValuePair(message.result);
             break;
         case "outputResult":
-            const pasteValue = await getValueFomKey(message.key);
-            browser.runtime.sendMessage({
+            getValueFomKey(message.key).then(pasteValue =>
+            {browser.runtime.sendMessage({
                 command: "addValueToClipboard", value: pasteValue
-            });
-            break;
+            })}
+            );
+            break;;
         case "getKeys":
-            const keys = await getDictKeys();
-            return new Promise( resolve => {
-                resolve(keys);
+            console.log("in getKeys")
+            getDictKeys().then(result => {
+                sendResponse(result);
             });
+            return true;
         case "getKeysAndVals":
-            const dict = await getKeysAndVals();
-            return new Promise( resolve => {
-                resolve(dict);
-            })
-            
+            getKeysAndVals().then(result => {
+                sendResponse(result);
+            });            
+            return true;
         case "getUpdateResult":
             //console.log("In getUpdateResult");
-            const pasteValue2 = await getValueFomKey(message.key);
+            getValueFomKey(message.key).then(pasteValue => {
             browser.runtime.sendMessage({
                 command: "updateValueInPopup",
-                value: pasteValue2,
+                value: pasteValue,
                 key: message.key
-            });
-            console.log("In getUpdateResult");
+            })});
             break;
         case "deleteKey":
             deleteDictKey(message.key);
