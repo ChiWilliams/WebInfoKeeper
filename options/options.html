@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<head>
+    <link href="/popup/popup.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="Options">
+    <h1>Browser options</h1>
+
+    <p>To modify keyboard shortcuts, open <code>about:addons</code> and click on the cogwheel button 
+        in the top right corner. Choose "Manage Extension Shortcuts" and input your new
+        shortcuts.</p>
+
+    <p>Close popup after setting value:</p>
+    <input type="radio" id="set-close-yes" name="set-close" value="true">
+    <label for="set-close-yes">Yes</label>
+    <input type="radio" id="set-close-no" name="set-close" value="false">
+    <label for="set-close-no">No</label>    
+
+    <p>Close popup after getting value:</p>
+    <input type="radio" id="get-close-yes" name="get-close" value="true">
+    <label for="get-close-yes">Yes</label>
+    <input type="radio" id="get-close-no" name="get-close" value="false">
+    <label for="get-close-no">No</label>
+
+    <div class="settings-exit-container">
+        <button id="save" class="utilities-nav">Save</button>
+        <button id="to-exit" class="utilities-nav">Close</button>
+    </div>
+    </div>
+
+
+
+</body>

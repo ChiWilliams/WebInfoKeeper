@@ -114,11 +114,13 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             logKeyValuePair(message.result);
             break;
         case "outputResult":
-            getValueFomKey(message.key).then(pasteValue =>
-            {browser.runtime.sendMessage({
-                command: "addValueToClipboard", value: pasteValue
-            })}
-            );
+            getValueFomKey(message.key).then(pasteValue =>{
+                browser.runtime.sendMessage({
+                    command: "addValueToClipboard", 
+                    value: pasteValue,
+                    close: message.close ?? null,
+            });
+        });
             break;;
         case "getKeys":
             console.log("in getKeys")

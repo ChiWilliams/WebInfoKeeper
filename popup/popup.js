@@ -2,11 +2,30 @@ const browser = chrome;
 
 let currentKeys = [];
 let currentKeysAndValues = {};
+let SETTINGS = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
     toDefaultState();
-  });
+    SETTINGS = await loadSettings();
+ });
 
+
+/**
+ * Settings
+ * @returns A javascript object with the settings
+ */
+async function loadSettings() {
+    let settings = await browser.storage.local.get('settings');
+    if (!settings || !settings.closeOnSet) {
+        settings = {
+            closeOnSet: true,
+            closeonGet: true
+        }
+    }
+    // console.log(`before we override settings, settings=${JSON.stringify(settings)}`)
+    await browser.storage.local.set(settings);
+    return settings;
+}
 
 /**
  * This function sets the global variables currentKeys and currentKeysAndValues
@@ -109,7 +128,11 @@ function inputMode(clipboard) {
                 command: "inputResult",
                 result: result
             });
-            window.close();
+            if (SETTINGS.closeOnSet) {
+                window.close();
+            } else {
+                toDefaultState();
+            }
         }
     });
 }
@@ -192,6 +215,14 @@ function listKeys(keysAndVals) {
         const buttonsDiv = document.createElement('div');
         buttonsDiv.className = 'key-list-buttons';
 
+        //create get button
+        const getButton = document.createElement('button');
+        getButton.textContent = 'Get';
+        getButton.onclick = () => {
+            navigator.clipboard.writeText(value);
+            toDefaultState();
+        }
+
         //create update buttons:
         const updateButton = document.createElement('button');
         updateButton.textContent = 'Update';
@@ -215,15 +246,6 @@ function listKeys(keysAndVals) {
             await toDefaultState();
         }
 
-        const getButton = document.createElement('button');
-        getButton.textContent = 'Get';
-        getButton.onclick = () => {
-            hideAllDivs();
-            browser.runtime.sendMessage( {
-                command: "outputResult",
-                key: key
-            })
-        }
 
         // creating the tool tip:
         const tooltipDiv = document.createElement('div');
@@ -240,6 +262,7 @@ function listKeys(keysAndVals) {
         tooltipDiv.appendChild(tooltipLabel);
         tooltipDiv.appendChild(tooltipValue)
 
+        buttonsDiv.appendChild(getButton);
         buttonsDiv.appendChild(updateButton);
         buttonsDiv.appendChild(deleteButton);
         li.appendChild(keySpan);
@@ -287,7 +310,11 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.command) {
         case "addValueToClipboard":
             navigator.clipboard.writeText(message.value);
-            window.close();
+            if (message.close ?? SETTINGS.closeonGet) {
+                window.close();
+            } else {
+                toDefaultState();
+            }
             break;
         case "getInput":
             navigator.clipboard.readText().then(clipboard => {

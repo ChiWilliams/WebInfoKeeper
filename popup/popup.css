@@ -2,6 +2,7 @@ h1 {
     color: whitesmoke;
     text-align: center;
     margin-bottom: 2rem;
+    font-family: "Open Sans", serif;
 }
 
 label {
@@ -163,4 +164,5 @@ h1 { grid-area: title; }
 
 h2, p, li {
     color: ghostwhite;
+    font-family: Garamond, 'Times New Roman', Times, serif;
 }
