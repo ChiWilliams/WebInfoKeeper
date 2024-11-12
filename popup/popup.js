@@ -54,19 +54,10 @@ function addKeysToDoc(keys) {
 }
 
 function hideAllDivs() {
-    const inputDiv = document.getElementById("input-mode-div");
-    const defaultDiv = document.getElementById("default-div");
-    const outputDiv = document.getElementById("output-mode-div");
-    const updateDiv = document.getElementById("update-mode-div");
-    const listDiv = document.getElementById("list-keys-div");
-    const settingsDiv = document.getElementById("settings-div");
-
-    defaultDiv.style.display = "none";
-    inputDiv.style.display = "none";
-    outputDiv.style.display = "none";
-    updateDiv.style.display = "none";
-    listDiv.style.display = "none";
-    settingsDiv.style.display = "none";
+    const topLevelDivs = document.querySelectorAll("body>div")
+    topLevelDivs.forEach(div => {
+        div.style.display = "none";
+    });
 
 }
 
