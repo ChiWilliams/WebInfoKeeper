@@ -7,6 +7,7 @@ let SETTINGS = {};
 document.addEventListener('DOMContentLoaded', async () => {
     toDefaultState();
     SETTINGS = await loadSettings();
+    console.log(`SETTINGS is ${JSON.stringify(SETTINGS)}`);
  });
 
 
@@ -15,15 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
  * @returns A javascript object with the settings
  */
 async function loadSettings() {
-    let settings = await browser.storage.local.get('settings');
-    if (!settings || !settings.closeOnSet) {
+    let { settings } = await browser.storage.local.get('settings');
+    if (!settings || Object.keys(settings).length === 0) {
         settings = {
             closeOnSet: true,
-            closeonGet: true
+            closeOnGet: true
         }
+        await browser.storage.local.set({ settings : settings });
     }
-    // console.log(`before we override settings, settings=${JSON.stringify(settings)}`)
-    await browser.storage.local.set(settings);
     return settings;
 }
 
@@ -310,7 +310,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.command) {
         case "addValueToClipboard":
             navigator.clipboard.writeText(message.value);
-            if (message.close ?? SETTINGS.closeonGet) {
+            if (message.close ?? SETTINGS.closeOnGet) {
                 window.close();
             } else {
                 toDefaultState();
