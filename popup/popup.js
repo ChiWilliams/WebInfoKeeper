@@ -6,10 +6,13 @@ let SETTINGS = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
     toDefaultState();
-    SETTINGS = await loadSettings();
     console.log(`SETTINGS is ${JSON.stringify(SETTINGS)}`);
  });
 
+window.addEventListener("storage", (e) => {
+    console.log("is anybody here?")
+    console.log(e)
+});
 
 /**
  * Settings
@@ -56,12 +59,14 @@ function hideAllDivs() {
     const outputDiv = document.getElementById("output-mode-div");
     const updateDiv = document.getElementById("update-mode-div");
     const listDiv = document.getElementById("list-keys-div");
+    const settingsDiv = document.getElementById("settings-div");
 
     defaultDiv.style.display = "none";
     inputDiv.style.display = "none";
     outputDiv.style.display = "none";
     updateDiv.style.display = "none";
     listDiv.style.display = "none";
+    settingsDiv.style.display = "none";
 
 }
 
@@ -85,8 +90,11 @@ async function toDefaultState() {
         keyValueList.removeChild(keyValueList.lastChild)
     }
 
+    // we refresh the current keys
     await refreshKeyData();
     addKeysToDoc(currentKeys);
+    // we refresh settings:
+    SETTINGS = await loadSettings();
 }
 
 /**
@@ -362,6 +370,29 @@ document.addEventListener('click', async (e) => {
     // return to default (homepage)
     if (e.target.matches('.to-default')) {
         toDefaultState();
+    }
+
+    // settings
+    if (e.target.matches('#to-settings')) {
+        hideAllDivs();
+        const settingsDiv = document.getElementById("settings-div");
+        settingsDiv.style.display = "block";
+        const iframe = document.getElementById("settings-iframe");
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+        const saveButton = iframeDocument.getElementById("settings-save");
+        const exitButton = iframeDocument.getElementById("to-exit");
+        const saveAndCloseButton = iframeDocument.getElementById("save-and-close");
+        exitButton.style.display = "block";
+        saveAndCloseButton.style.display = "block";
+
+        exitButton.onclick = () => {
+            toDefaultState();
+        }
+
+        saveAndCloseButton.onclick = () => {
+            saveButton.click();
+            toDefaultState();
+        }
     }
 
     // exit

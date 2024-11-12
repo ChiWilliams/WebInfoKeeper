@@ -33,6 +33,6 @@ document.addEventListener('click', async (e) => {
         } catch (error) {
             console.error(error)
         }
-        console.log("saved!")
+        // console.log("saved!")
     }
 });
